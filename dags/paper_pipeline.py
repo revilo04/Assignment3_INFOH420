@@ -102,6 +102,7 @@ with DAG(
     schedule=timedelta(minutes=5),
     start_date=datetime(2026, 11, 1),
     catchup=False,
+    max_active_runs=1,
     tags=["assignment3", "research_library"],
 ) as dag:
 
