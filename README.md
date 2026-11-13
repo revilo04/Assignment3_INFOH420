@@ -85,3 +85,47 @@ python -c "import json; from scripts.llm_extractor import extract_paper_metadata
 On Windows PowerShell, replace `python` with `.\.venv\Scripts\python.exe` if the environment is not activated.
 
 This command prints the extracted metadata without writing to SQLite or triggering HTML generation and Discord notifications.
+
+## Reuse the team's processed paper records
+
+The contribution is available on the `assignment3-local-setup` branch. Use that
+branch until it is merged into `main`.
+
+`scripts/downstream.py` generates the searchable HTML catalogue and sends Discord
+notifications. The DAG allows one active run at a time.
+
+`sample_data/papers.db` is a consistent SQLite snapshot taken on November 6, 2026.
+It contains 8 paper records with filenames, titles, summaries, keywords,
+categories, and processing timestamps. The corresponding PDFs are in the team's
+shared Google Drive `ResearchLibrary/papers` folder.
+
+On a fresh clone, after installing the project dependencies and Ollama model,
+run the following from the repository root in a Linux/macOS shell. Stop Airflow
+before copying the database.
+
+```bash
+git switch assignment3-local-setup
+mkdir -p data
+cp -n sample_data/papers.db data/papers.db
+cp -n .env.example .env
+```
+
+The `-n` option skips an existing destination. If you already have a local
+database, keep it or back it up before deliberately replacing it with this
+snapshot. Configure `DB_PATH=./data/papers.db` in your local `.env`.
+
+Set `PAPERS_DIR` and `OUTPUT_DIR` to the paths where your own machine can access
+the shared Drive folders. Configure your local Ollama endpoint and a Discord
+webhook shared privately by the team.
+
+Start Ollama and Airflow, then trigger `research_paper_pipeline`. The catalogue
+is generated from all database records. Filenames already present in the
+snapshot are skipped during PDF processing and produce no new-paper alerts.
+Add a PDF with a new filename to test extraction and notification delivery.
+
+Each machine maintains its own local database. Coordinate testing so one
+teammate runs the pipeline against the shared Drive at a time.
+
+The snapshot is a starting dataset. Subsequent local records are stored in
+`data/papers.db`, which Git ignores. Keep that working database outside the
+Drive-synced folder.
